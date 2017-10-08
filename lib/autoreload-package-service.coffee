@@ -12,6 +12,15 @@ module.exports = new class AutoreloadPackageService
     @nodePath = require 'path'
     @disposables = new CompositeDisposable
     @disposables.add @provideAutoreload()(pkg:"autoreload-package-service")
+
+    @disposables.add atom.config.observe 'autoreload-package-service',
+      ({_packages, files, folders}) =>
+        files = [files..., "package.json"]
+        folders = [folders..., "lib"]
+        _packages.forEach (pkg) =>
+          if atom.packages.isPackageActive pkg
+            @provideAutoreload()({pkg, files, folders, persistent: yes})
+
   consumeDebug: (debugSetup) =>
     @debug = debugSetup(pkg: "autoreload-package-service", nsp: "")
     @debug("got debug service",2)
@@ -24,7 +33,7 @@ module.exports = new class AutoreloadPackageService
         delete require.cache[child.id]
     null
   provideAutoreload: =>
-    return ({pkg,folders,files}) =>
+    return ({pkg, folders, files, persistent}) =>
       throw new Error "no pkg provided" unless pkg?
       return {dispose: ->} unless atom.inDevMode()
       folders ?= ["lib"]
@@ -43,7 +52,7 @@ module.exports = new class AutoreloadPackageService
       reload = =>
         return null if reloading
         @debug("reloading #{pkg}",2)
-        reloading = true
+        reloading = true if not persistent
         dispose()
         pkgModel = atom.packages.getLoadedPackage(pkg)
         mainPath = pkgModel.mainModulePath
@@ -75,13 +84,15 @@ module.exports = new class AutoreloadPackageService
       )
       watcher.on 'all', () ->
         setTimeout reload, 10
-      #dispose on package deactivate
-      disposable = atom.packages.onDidDeactivatePackage -> setTimeout ((p) ->
-        if p.name == pkg
-          watcher.close()
-        ),10
-      watchers.push disposable
-      @disposables.add disposable
+      # dispose on package deactivate because packages using service
+      # will resubscribe
+      if not persistent
+        disposable = atom.packages.onDidDeactivatePackage -> setTimeout ((p) ->
+          if p.name == pkg
+            watcher.close()
+          ),10
+        watchers.push disposable
+        @disposables.add disposable
       return {reload:reload,dispose:dispose}
   deactivate: ->
     @disposables.dispose()

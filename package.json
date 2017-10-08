@@ -31,5 +31,32 @@
         "^0.0.1": "consumeDebug"
       }
     }
+  },
+  "configSchema": {
+    "_packages": {
+      "title": "Packages",
+      "description": "The names of packages that will be auto-reloaded in dev mode, same as the `name` of your `package.json`.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "files": {
+      "description": "The top level files that will be watched for each package listed above, in addition to `package.json`.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "folders": {
+      "description": "The top level folders that will be watched for each package listed above, in addition to `lib`.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    }
   }
 }

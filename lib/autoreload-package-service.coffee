@@ -88,7 +88,7 @@ module.exports = new class AutoreloadPackageService
       # will resubscribe
       if not persistent
         disposable = atom.packages.onDidDeactivatePackage -> setTimeout ((p) ->
-          if p.name == pkg
+          if p.name? and p.name == pkg
             watcher.close()
           ),10
         watchers.push disposable

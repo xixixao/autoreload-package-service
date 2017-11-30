@@ -18,7 +18,7 @@ module.exports = new class AutoreloadPackageService
         files = [files..., "package.json"]
         folders = [folders..., "lib"]
         _packages.forEach (pkg) =>
-          if atom.packages.isPackageActive pkg
+          if atom.packages.isPackageLoaded pkg
             @provideAutoreload()({pkg, files, folders, persistent: yes})
 
   consumeDebug: (debugSetup) =>
